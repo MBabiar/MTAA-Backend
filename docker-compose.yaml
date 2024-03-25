@@ -10,7 +10,7 @@ services:
         ports:
             - 5432:5432
         volumes:
-            - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+            - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
 
     backend-server:
         container_name: backend-server
