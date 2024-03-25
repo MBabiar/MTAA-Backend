@@ -1,0 +1,7 @@
+{
+    "name": "mtaa-backend",
+    "type":"module",
+    "dependencies": {
+        "express": "^4.19.2"
+    }
+}
