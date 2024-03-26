@@ -1,7 +1,8 @@
 {
     "name": "mtaa-backend",
-    "type":"module",
     "dependencies": {
-        "express": "^4.19.2"
+        "bcrypt": "^5.1.1",
+        "express": "^4.19.2",
+        "pg": "^8.11.3"
     }
 }

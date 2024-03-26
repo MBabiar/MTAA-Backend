@@ -1,0 +1,39 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "MTAA-Backend",
+    "dateExported": "2024-03-26T22:39:16.879Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "d38cf5a5-3dea-4832-85ee-66559b3fa953",
+            "colId": "5a258b34-0eb6-457e-b357-6218ebf42af5",
+            "containerId": "",
+            "name": "Register",
+            "url": "http://localhost:8080/register?username=John Snow&email=johnsnow@gmail.com&password=johnsnow1",
+            "method": "POST",
+            "sortNum": 10000,
+            "created": "2024-03-26T22:20:19.491Z",
+            "modified": "2024-03-26T22:28:18.336Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "username",
+                    "value": "John Snow",
+                    "isPath": false
+                },
+                {
+                    "name": "email",
+                    "value": "johnsnow@gmail.com",
+                    "isPath": false
+                },
+                {
+                    "name": "password",
+                    "value": "johnsnow1",
+                    "isPath": false
+                }
+            ],
+            "tests": []
+        }
+    ]
+}
