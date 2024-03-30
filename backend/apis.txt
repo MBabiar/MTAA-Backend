@@ -8,3 +8,6 @@ Profile
 -   Country
 -   Profile Picture
 -   Games Played / Wins / Losses
+
+After Match
+-   Change for both players: Games Played / Wins / Losses
