@@ -1,0 +1,27 @@
+@startuml MTAA PostgreSQL Database Physical Model
+
+left to right direction
+skinparam class {
+    FontStyle bold
+}
+
+!define primary_key(x) <b><color:#b8861b><&key></color> <color:#b8861b>x:</color></b>
+!define foreign_key(x) <b><color:#464600><&key></color><color:#464600>x</color>:</b>
+!define column(x) <b><color:#efefef><&media-record></color>x:</b>
+!define value(x) <b><color:#7e2798>x</color></b>
+!define table(x) entity x << (T, white) >>
+
+table(users) {
+    primary_key(user_id) value(UUID)
+    --
+    column(name) value(VARCHAR)
+    column(email) value(VARCHAR)
+    column(password) value(VARCHAR)
+    column(profile_picture) value(BYTEA)
+    column(country) value(VARCHAR)
+    column(games_played) value(INTEGER)
+    column(won) value(INTEGER)
+    column(lost) value(INTEGER)
+}
+
+@enduml
