@@ -104,6 +104,21 @@ function startServer() {
             res.status(500).send('Failed to get leaderboard');
         }
     });
+
+    app.get('/user', async (req, res) => {
+        const userID = req.query.user_id;
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                res.status(200).send(user);
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to get user');
+        }
+    });
 }
 
 // Start connecting to DB

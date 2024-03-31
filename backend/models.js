@@ -15,7 +15,7 @@ const sequelize = new Sequelize(params.database, params.user, params.password, {
 });
 
 const User = sequelize.define('User', {
-    id: {
+    user_id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         allowNull: false,

@@ -1,7 +1,7 @@
 {
     "client": "Thunder Client",
     "collectionName": "MTAA-Backend",
-    "dateExported": "2024-03-31T19:15:29.442Z",
+    "dateExported": "2024-03-31T19:47:57.510Z",
     "version": "1.1",
     "folders": [],
     "requests": [
@@ -55,6 +55,26 @@
                 {
                     "name": "password",
                     "value": "johnsnow1",
+                    "isPath": false
+                }
+            ],
+            "tests": []
+        },
+        {
+            "_id": "ac3c50ba-2489-45d7-a497-a2a8ae6aeb9c",
+            "colId": "5a258b34-0eb6-457e-b357-6218ebf42af5",
+            "containerId": "",
+            "name": "User Info",
+            "url": "http://localhost:8080/user?user_id=379dd783-1e40-4f7b-ada0-5563962b7ef6",
+            "method": "GET",
+            "sortNum": 25000,
+            "created": "2024-03-31T19:43:32.996Z",
+            "modified": "2024-03-31T19:46:33.076Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "user_id",
+                    "value": "379dd783-1e40-4f7b-ada0-5563962b7ef6",
                     "isPath": false
                 }
             ],
