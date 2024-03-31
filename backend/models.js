@@ -15,6 +15,12 @@ const sequelize = new Sequelize(params.database, params.user, params.password, {
 });
 
 const User = sequelize.define('User', {
+    id: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+        allowNull: false,
+        primaryKey: true,
+    },
     name: {
         type: Sequelize.STRING,
         allowNull: false,
@@ -43,19 +49,32 @@ const User = sequelize.define('User', {
     },
     games_played: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        defaultValue: 0,
+        allowNull: false,
     },
     won: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        defaultValue: 0,
+        allowNull: false,
     },
     lost: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        defaultValue: 0,
+        allowNull: false,
     },
 });
 
-sequelize.sync(); //sync all models
+async function syncAndSeed() {
+    await sequelize.sync();
+
+    const { count } = await User.findAndCountAll();
+    if (count === 0) {
+        const { seed } = require('./seeder');
+        seed();
+    }
+}
+
+syncAndSeed();
 
 module.exports = {
     User,

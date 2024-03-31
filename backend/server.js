@@ -72,6 +72,38 @@ function startServer() {
             }
         }
     });
+
+    app.get('/login', async (req, res) => {
+        const { email, password } = req.query;
+        try {
+            const user = await User.findOne({ where: { email } });
+            if (user && bcrypt.compareSync(password, user.password)) {
+                res.status(200).send('Login successful');
+            } else {
+                res.status(401).send('Invalid email or password');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to login');
+        }
+    });
+
+    app.get('/leaderboard', async (req, res) => {
+        try {
+            const users = await User.findAll({
+                attributes: ['name', 'won'],
+                order: [
+                    ['won', 'DESC'],
+                    ['name', 'ASC'],
+                ],
+                limit: 100,
+            });
+            res.status(200).send(users);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to get leaderboard');
+        }
+    });
 }
 
 // Start connecting to DB

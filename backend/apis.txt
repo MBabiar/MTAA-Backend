@@ -1,7 +1,7 @@
 Basic
--   Login
--   Register
--   Leaderboard
+-   Login ✔
+-   Register ✔
+-   Leaderboard ✔
 
 Profile
 -   Username

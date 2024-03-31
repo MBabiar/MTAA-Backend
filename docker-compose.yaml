@@ -19,6 +19,7 @@ services:
             - db
         environment:
             - DB_HOST=postgresql-db-container
+            # - DB_HOST=host.docker.internal
             - DB_PORT=5432
             - DB_NAME=postgres
             - DB_USER=postgres
