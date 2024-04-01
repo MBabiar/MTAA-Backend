@@ -78,7 +78,7 @@ function startServer() {
         try {
             const user = await User.findOne({ where: { email } });
             if (user && bcrypt.compareSync(password, user.password)) {
-                res.status(200).send('Login successful');
+                res.status(200).send(user.user_id);
             } else {
                 res.status(401).send('Invalid email or password');
             }
@@ -117,6 +117,42 @@ function startServer() {
         } catch (error) {
             console.error(error);
             res.status(500).send('Failed to get user');
+        }
+    });
+
+    app.put('/user/won', async (req, res) => {
+        const userID = req.query.user_id;
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                user.games_played++;
+                user.won++;
+                await user.save();
+                res.status(200).send('User updated successfully');
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to update user');
+        }
+    });
+
+    app.put('/user/lost', async (req, res) => {
+        const userID = req.query.user_id;
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                user.games_played++;
+                user.lost++;
+                await user.save();
+                res.status(200).send('User updated successfully');
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to update user');
         }
     });
 }

@@ -10,4 +10,4 @@ Profile
 -   Games Played / Wins / Losses ✔
 
 After Match
--   Change for both players: Games Played / Wins / Losses
+-   Change for both players: Games Played / Wins / Losses ✔

@@ -1,7 +1,7 @@
 {
     "client": "Thunder Client",
     "collectionName": "MTAA-Backend",
-    "dateExported": "2024-03-31T19:47:57.510Z",
+    "dateExported": "2024-04-01T21:15:25.913Z",
     "version": "1.1",
     "folders": [],
     "requests": [
@@ -75,6 +75,46 @@
                 {
                     "name": "user_id",
                     "value": "379dd783-1e40-4f7b-ada0-5563962b7ef6",
+                    "isPath": false
+                }
+            ],
+            "tests": []
+        },
+        {
+            "_id": "50dc73be-9cc2-46b7-ae92-65cfdbda06b7",
+            "colId": "5a258b34-0eb6-457e-b357-6218ebf42af5",
+            "containerId": "",
+            "name": "User Won",
+            "url": "http://localhost:8080/user/won?user_id=a41a4f71-f144-46f9-8b41-672fe2b0eb5d",
+            "method": "PUT",
+            "sortNum": 27500,
+            "created": "2024-04-01T21:11:17.517Z",
+            "modified": "2024-04-01T21:12:28.624Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "user_id",
+                    "value": "a41a4f71-f144-46f9-8b41-672fe2b0eb5d",
+                    "isPath": false
+                }
+            ],
+            "tests": []
+        },
+        {
+            "_id": "422ecaf5-03d9-4b95-9035-6c7741c69fb1",
+            "colId": "5a258b34-0eb6-457e-b357-6218ebf42af5",
+            "containerId": "",
+            "name": "User Lost",
+            "url": "http://localhost:8080/user/lost?user_id=a41a4f71-f144-46f9-8b41-672fe2b0eb5d",
+            "method": "PUT",
+            "sortNum": 28750,
+            "created": "2024-04-01T21:11:26.996Z",
+            "modified": "2024-04-01T21:12:28.230Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "user_id",
+                    "value": "a41a4f71-f144-46f9-8b41-672fe2b0eb5d",
                     "isPath": false
                 }
             ],
