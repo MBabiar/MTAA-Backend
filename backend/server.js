@@ -161,18 +161,17 @@ function startServer() {
 
     app.put('/picture', async (req, res) => {
         const userID = req.query.user_id;
-        const pictureByteArray = req.query.picture;
+        const pictureByteArray = req.body.picture;
         try {
-            const base64Image = Buffer.from(pictureByteArray).toString('base64');
-            const imageBuffer = Buffer.from(base64Image, 'base64');
-
-            const resizedPictureBuffer = await sharp(imageBuffer).resize(200, 200).png().toBuffer();
-            const resizedPictureByteArray = Array.from(resizedPictureBuffer);
+            const imageBuffer = Buffer.from(pictureByteArray, 'hex');
+            const resizedImageBuffer = await sharp(imageBuffer)
+                .resize({ width: 150, height: 150 })
+                .toBuffer();
+            // fs.writeFileSync('image.png', resizedImageBuffer); // If you want to save the image to disk
 
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {
-                user.picture = resizedPictureByteArray;
-                await user.save();
+                user.profile_picture = resizedImageBuffer;
                 res.status(200).send('Picture uploaded successfully');
             } else {
                 res.status(404).send('User not found');
@@ -188,7 +187,12 @@ function startServer() {
         try {
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {
-                res.status(200).send('Picture downloaded successfully');
+                const buffer = Buffer.from(user.profile_picture);
+                res.writeHead(200, {
+                    'Content-Type': 'image/png',
+                    'Content-Length': buffer.length,
+                });
+                res.status(200).end(buffer);
             } else {
                 res.status(404).send('User not found');
             }
