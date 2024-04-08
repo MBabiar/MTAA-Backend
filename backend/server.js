@@ -4,6 +4,7 @@ const { Client } = require('pg');
 const socket = require('socket.io');
 const { Sequelize } = require('sequelize');
 const sharp = require('sharp');
+const fileType = require('file-type');
 
 const app = express();
 const serverPort = 8080;
@@ -162,15 +163,24 @@ function startServer() {
     app.put('/picture', async (req, res) => {
         const userID = req.query.user_id;
         const pictureByteArray = req.body.picture;
-        try {
-            const imageBuffer = Buffer.from(pictureByteArray, 'hex');
-            const resizedImageBuffer = await sharp(imageBuffer)
-                .resize({ width: 150, height: 150 })
-                .toBuffer();
-            // fs.writeFileSync('image.png', resizedImageBuffer); // If you want to save the image to disk
 
+        try {
             const user = await User.findOne({ where: { user_id: userID } });
+
             if (user) {
+                const imageBuffer = Buffer.from(pictureByteArray, 'hex');
+                const type = await fileType.fromBuffer(imageBuffer);
+                console.log(type);
+
+                if (type.mime !== 'image/png') {
+                    res.status(400).send('Invalid image format');
+                    return;
+                }
+
+                const resizedImageBuffer = await sharp(imageBuffer)
+                    .resize({ width: 150, height: 150 })
+                    .toBuffer();
+                // fs.writeFileSync('image.png', resizedImageBuffer); // If you want to save the image to disk
                 user.profile_picture = resizedImageBuffer;
                 res.status(200).send('Picture uploaded successfully');
             } else {
@@ -184,8 +194,10 @@ function startServer() {
 
     app.get('/picture', async (req, res) => {
         const userID = req.query.user_id;
+
         try {
             const user = await User.findOne({ where: { user_id: userID } });
+
             if (user) {
                 const buffer = Buffer.from(user.profile_picture);
                 res.writeHead(200, {
