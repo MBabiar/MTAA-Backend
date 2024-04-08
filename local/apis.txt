@@ -1,0 +1,18 @@
+Basic
+-   Login ✔
+-   Register ✔
+-   Leaderboard ✔
+
+Profile
+-   Username ✔
+-   Country ✔
+-   Profile Picture ✔
+-   Games Played / Wins / Losses ✔
+
+After Match
+-   Change for both players: Games Played / Wins / Losses ✔
+
+Change Profile Info
+-   Change Profile Picture
+-   Change Password
+-   Change Country

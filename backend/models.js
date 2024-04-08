@@ -46,6 +46,7 @@ const User = sequelize.define('User', {
         validate: {
             is: /^[a-z\s]+$/i,
         },
+        defaultValue: 'Not specified',
     },
     games_played: {
         type: Sequelize.INTEGER,
@@ -61,6 +62,10 @@ const User = sequelize.define('User', {
         type: Sequelize.INTEGER,
         defaultValue: 0,
         allowNull: false,
+    },
+    profile_picture: {
+        type: Sequelize.BLOB,
+        allowNull: true,
     },
 });
 

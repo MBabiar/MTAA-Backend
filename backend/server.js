@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const { Client } = require('pg');
 const socket = require('socket.io');
 const { Sequelize } = require('sequelize');
+const sharp = require('sharp');
 
 const app = express();
 const serverPort = 8080;
@@ -38,8 +39,10 @@ async function connectToDBWithRetry() {
 }
 
 // Server with RESTFUL API
+// TODO overenie či sa poslali všetky query parametre
 function startServer() {
     const { User } = require('./models');
+    const fs = require('fs');
 
     app.listen(serverPort, () => {
         console.log(`Server is listening at http://localhost:${serverPort} `);
@@ -153,6 +156,45 @@ function startServer() {
         } catch (error) {
             console.error(error);
             res.status(500).send('Failed to update user');
+        }
+    });
+
+    app.put('/picture', async (req, res) => {
+        const userID = req.query.user_id;
+        const pictureByteArray = req.query.picture;
+        try {
+            const base64Image = Buffer.from(pictureByteArray).toString('base64');
+            const imageBuffer = Buffer.from(base64Image, 'base64');
+
+            const resizedPictureBuffer = await sharp(imageBuffer).resize(200, 200).png().toBuffer();
+            const resizedPictureByteArray = Array.from(resizedPictureBuffer);
+
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                user.picture = resizedPictureByteArray;
+                await user.save();
+                res.status(200).send('Picture uploaded successfully');
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to upload picture');
+        }
+    });
+
+    app.get('/picture', async (req, res) => {
+        const userID = req.query.user_id;
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                res.status(200).send('Picture downloaded successfully');
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to get picture');
         }
     });
 }
