@@ -3,8 +3,6 @@ const bcrypt = require('bcrypt');
 const { Client } = require('pg');
 const socket = require('socket.io');
 const { Sequelize } = require('sequelize');
-const sharp = require('sharp');
-const fileType = require('file-type');
 
 const app = express();
 const serverPort = 8080;
@@ -40,10 +38,8 @@ async function connectToDBWithRetry() {
 }
 
 // Server with RESTFUL API
-// TODO overenie či sa poslali všetky query parametre
 function startServer() {
     const { User } = require('./models');
-    const fs = require('fs');
 
     app.listen(serverPort, () => {
         console.log(`Server is listening at http://localhost:${serverPort} `);
@@ -217,60 +213,6 @@ function startServer() {
         } catch (error) {
             console.error(error);
             res.status(500).send('Failed to update user');
-        }
-    });
-
-    app.put('/picture', async (req, res) => {
-        const userID = req.query.user_id;
-        const pictureByteArray = req.body.picture;
-
-        try {
-            const user = await User.findOne({ where: { user_id: userID } });
-
-            if (user) {
-                const imageBuffer = Buffer.from(pictureByteArray, 'hex');
-                const type = await fileType.fromBuffer(imageBuffer);
-                console.log(type);
-
-                if (type.mime !== 'image/png') {
-                    res.status(400).send('Invalid image format');
-                    return;
-                }
-
-                const resizedImageBuffer = await sharp(imageBuffer)
-                    .resize({ width: 150, height: 150 })
-                    .toBuffer();
-                // fs.writeFileSync('image.png', resizedImageBuffer); // If you want to save the image to disk
-                user.profile_picture = resizedImageBuffer;
-                res.status(200).send('Picture uploaded successfully');
-            } else {
-                res.status(404).send('User not found');
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Failed to upload picture');
-        }
-    });
-
-    app.get('/picture', async (req, res) => {
-        const userID = req.query.user_id;
-
-        try {
-            const user = await User.findOne({ where: { user_id: userID } });
-
-            if (user) {
-                const buffer = Buffer.from(user.profile_picture);
-                res.writeHead(200, {
-                    'Content-Type': 'image/png',
-                    'Content-Length': buffer.length,
-                });
-                res.status(200).end(buffer);
-            } else {
-                res.status(404).send('User not found');
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Failed to get picture');
         }
     });
 
