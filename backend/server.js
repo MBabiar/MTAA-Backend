@@ -38,7 +38,6 @@ async function connectToDBWithRetry() {
 }
 
 // Server with RESTFUL API
-// TODO overenie či sa poslali všetky query parametre
 function startServer() {
     syncAndSeedDatabase();
 
@@ -235,7 +234,6 @@ function startServer() {
                 const resizedImageBuffer = await sharp(imageBuffer)
                     .resize({ width: 150, height: 150 })
                     .toBuffer();
-                // fs.writeFileSync('image.png', resizedImageBuffer); // If you want to save the image to disk
                 user.profile_picture = resizedImageBuffer;
                 await user.save();
                 res.status(200).send('Picture uploaded successfully');
