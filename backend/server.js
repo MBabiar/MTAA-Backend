@@ -1,10 +1,9 @@
-const express = require('express');
-const bcrypt = require('bcrypt');
-const { Client } = require('pg');
-const socket = require('socket.io');
-const { Sequelize } = require('sequelize');
-const sharp = require('sharp');
-const fileType = require('file-type');
+import bcrypt from 'bcrypt';
+import express from 'express';
+import * as fileType from 'file-type';
+import { Sequelize } from 'sequelize';
+import sharp from 'sharp';
+import { User, syncAndSeed } from './models.js';
 
 const app = express();
 const serverPort = 8080;
@@ -30,7 +29,6 @@ async function connectToDBWithRetry() {
     try {
         await sequelize.authenticate();
         console.log('Connection has been established successfully.');
-        startServer();
     } catch (error) {
         console.error('Unable to connect to the database:', error);
         setTimeout(() => {
@@ -42,11 +40,20 @@ async function connectToDBWithRetry() {
 // Server with RESTFUL API
 // TODO overenie či sa poslali všetky query parametre
 function startServer() {
-    const { User } = require('./models');
-    const fs = require('fs');
+    syncAndSeed();
 
     app.listen(serverPort, () => {
         console.log(`Server is listening at http://localhost:${serverPort} `);
+    });
+
+    app.get('/users', async (req, res) => {
+        try {
+            const users = await User.findAll();
+            res.status(200).send(users);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to get users');
+        }
     });
 
     app.post('/register', async (req, res) => {
@@ -109,72 +116,19 @@ function startServer() {
         }
     });
 
-    app.get('/user/username', async (req, res) => {
+    app.get('/user', async (req, res) => {
         const userID = req.query.user_id;
         try {
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {
-                res.status(200).send(user.name);
-            } else {
-                res.status(404).send('User not found');
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Failed to get user');
-        }
-    });
-
-    app.get('/user/country', async (req, res) => {
-        const userID = req.query.user_id;
-        try {
-            const user = await User.findOne({ where: { user_id: userID } });
-            if (user) {
-                res.status(200).send(user.country);
-            } else {
-                res.status(404).send('User not found');
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Failed to get user');
-        }
-    });
-
-    app.get('/user/gamesplayed', async (req, res) => {
-        const userID = req.query.user_id;
-        try {
-            const user = await User.findOne({ where: { user_id: userID } });
-            if (user) {
-                res.status(200).send(user.games_played.toString());
-            } else {
-                res.status(404).send('User not found');
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Failed to get user');
-        }
-    });
-
-    app.get('/user/won', async (req, res) => {
-        const userID = req.query.user_id;
-        try {
-            const user = await User.findOne({ where: { user_id: userID } });
-            if (user) {
-                res.status(200).send(user.won.toString());
-            } else {
-                res.status(404).send('User not found');
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Failed to get user');
-        }
-    });
-
-    app.get('/user/lost', async (req, res) => {
-        const userID = req.query.user_id;
-        try {
-            const user = await User.findOne({ where: { user_id: userID } });
-            if (user) {
-                res.status(200).send(user.lost.toString());
+                const userInfo = {
+                    username: user.name,
+                    country: user.country,
+                    games_played: user.games_played,
+                    won: user.won,
+                    lost: user.lost,
+                };
+                res.status(200).send(userInfo);
             } else {
                 res.status(404).send('User not found');
             }
@@ -274,13 +228,17 @@ function startServer() {
         }
     });
 
-
     app.put('/user/password', async (req, res) => {
         const userID = req.query.user_id;
-        const newPassword = req.query.password;
+        const oldPassword = req.query.old_password;
+        const newPassword = req.query.new_password;
         try {
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {
+                if (!bcrypt.compareSync(oldPassword, user.password)) {
+                    res.status(400).send('Invalid old password');
+                    return;
+                }
                 user.password = bcrypt.hashSync(newPassword, 10);
                 await user.save();
                 res.status(200).send('Password updated successfully');
@@ -314,5 +272,7 @@ function startServer() {
 
 // Start connecting to DB
 setTimeout(() => {
-    connectToDBWithRetry();
+    connectToDBWithRetry().then(() => {
+        startServer();
+    });
 }, 1500);

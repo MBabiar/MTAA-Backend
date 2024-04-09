@@ -1,4 +1,6 @@
-const { Sequelize } = require('sequelize');
+import { Sequelize } from 'sequelize';
+import { seed } from './seeder.js';
+
 const params = {
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
@@ -14,7 +16,7 @@ const sequelize = new Sequelize(params.database, params.user, params.password, {
     logging: false,
 });
 
-const User = sequelize.define('User', {
+export const User = sequelize.define('User', {
     user_id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
@@ -69,18 +71,11 @@ const User = sequelize.define('User', {
     },
 });
 
-async function syncAndSeed() {
+export async function syncAndSeed() {
     await sequelize.sync();
 
     const { count } = await User.findAndCountAll();
     if (count === 0) {
-        const { seed } = require('./seeder');
         seed();
     }
 }
-
-syncAndSeed();
-
-module.exports = {
-    User,
-};

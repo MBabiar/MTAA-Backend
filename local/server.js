@@ -108,12 +108,72 @@ function startServer() {
         }
     });
 
-    app.get('/user', async (req, res) => {
+    app.get('/user/username', async (req, res) => {
         const userID = req.query.user_id;
         try {
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {
-                res.status(200).send(user);
+                res.status(200).send(user.name);
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to get user');
+        }
+    });
+
+    app.get('/user/country', async (req, res) => {
+        const userID = req.query.user_id;
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                res.status(200).send(user.country);
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to get user');
+        }
+    });
+
+    app.get('/user/gamesplayed', async (req, res) => {
+        const userID = req.query.user_id;
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                res.status(200).send(user.games_played.toString());
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to get user');
+        }
+    });
+
+    app.get('/user/won', async (req, res) => {
+        const userID = req.query.user_id;
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                res.status(200).send(user.won.toString());
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to get user');
+        }
+    });
+
+    app.get('/user/lost', async (req, res) => {
+        const userID = req.query.user_id;
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                res.status(200).send(user.lost.toString());
             } else {
                 res.status(404).send('User not found');
             }
@@ -162,15 +222,24 @@ function startServer() {
     app.put('/picture', async (req, res) => {
         const userID = req.query.user_id;
         const pictureByteArray = req.body.picture;
-        try {
-            const imageBuffer = Buffer.from(pictureByteArray, 'hex');
-            const resizedImageBuffer = await sharp(imageBuffer)
-                .resize({ width: 150, height: 150 })
-                .toBuffer();
-            // fs.writeFileSync('image.png', resizedImageBuffer); // If you want to save the image to disk
 
+        try {
             const user = await User.findOne({ where: { user_id: userID } });
+
             if (user) {
+                const imageBuffer = Buffer.from(pictureByteArray, 'hex');
+                const type = await fileType.fromBuffer(imageBuffer);
+                console.log(type);
+
+                if (type.mime !== 'image/png') {
+                    res.status(400).send('Invalid image format');
+                    return;
+                }
+
+                const resizedImageBuffer = await sharp(imageBuffer)
+                    .resize({ width: 150, height: 150 })
+                    .toBuffer();
+                // fs.writeFileSync('image.png', resizedImageBuffer); // If you want to save the image to disk
                 user.profile_picture = resizedImageBuffer;
                 res.status(200).send('Picture uploaded successfully');
             } else {
@@ -184,8 +253,10 @@ function startServer() {
 
     app.get('/picture', async (req, res) => {
         const userID = req.query.user_id;
+
         try {
             const user = await User.findOne({ where: { user_id: userID } });
+
             if (user) {
                 const buffer = Buffer.from(user.profile_picture);
                 res.writeHead(200, {
@@ -199,6 +270,47 @@ function startServer() {
         } catch (error) {
             console.error(error);
             res.status(500).send('Failed to get picture');
+        }
+    });
+
+    app.put('/user/password', async (req, res) => {
+        const userID = req.query.user_id;
+        const oldPassword = req.query.old_password;
+        const newPassword = req.query.new_password;
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                if (!bcrypt.compareSync(oldPassword, user.password)) {
+                    res.status(400).send('Invalid old password');
+                    return;
+                }
+                user.password = bcrypt.hashSync(newPassword, 10);
+                await user.save();
+                res.status(200).send('Password updated successfully');
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to update password');
+        }
+    });
+
+    app.put('/user/country', async (req, res) => {
+        const userID = req.query.user_id;
+        const newCountry = req.query.country;
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+            if (user) {
+                user.country = newCountry;
+                await user.save();
+                res.status(200).send('Country updated successfully');
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to update country');
         }
     });
 }
