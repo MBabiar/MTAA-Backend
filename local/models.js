@@ -69,7 +69,7 @@ const User = sequelize.define('User', {
     },
 });
 
-async function syncAndSeed() {
+async function syncAndSeedDatabase() {
     await sequelize.sync();
 
     const { count } = await User.findAndCountAll();
@@ -79,7 +79,7 @@ async function syncAndSeed() {
     }
 }
 
-syncAndSeed();
+syncAndSeedDatabase();
 
 module.exports = {
     User,

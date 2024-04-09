@@ -3,7 +3,7 @@ import express from 'express';
 import { fileTypeFromBuffer } from 'file-type';
 import { Sequelize } from 'sequelize';
 import sharp from 'sharp';
-import { User, syncAndSeed } from './models.js';
+import { User, syncAndSeedDatabase } from './models.js';
 
 const app = express();
 const serverPort = 8080;
@@ -40,20 +40,10 @@ async function connectToDBWithRetry() {
 // Server with RESTFUL API
 // TODO overenie či sa poslali všetky query parametre
 function startServer() {
-    syncAndSeed();
+    syncAndSeedDatabase();
 
     app.listen(serverPort, () => {
         console.log(`Server is listening at http://localhost:${serverPort} `);
-    });
-
-    app.get('/users', async (req, res) => {
-        try {
-            const users = await User.findAll();
-            res.status(200).send(users);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Failed to get users');
-        }
     });
 
     app.post('/register', async (req, res) => {
@@ -62,6 +52,11 @@ function startServer() {
             email: req.query.email,
             hashedPassword: bcrypt.hashSync(req.query.password, 10),
         };
+
+        if (!newUser.name || !newUser.email || !newUser.hashedPassword) {
+            res.status(400).send('Missing required fields');
+            return;
+        }
 
         try {
             await User.create({
@@ -86,6 +81,12 @@ function startServer() {
 
     app.get('/login', async (req, res) => {
         const { email, password } = req.query;
+
+        if (!email || !password) {
+            res.status(400).send('Missing required fields');
+            return;
+        }
+
         try {
             const user = await User.findOne({ where: { email } });
             if (user && bcrypt.compareSync(password, user.password)) {
@@ -118,6 +119,12 @@ function startServer() {
 
     app.get('/user', async (req, res) => {
         const userID = req.query.user_id;
+
+        if (!userID) {
+            res.status(400).send('Missing required fields');
+            return;
+        }
+
         try {
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {
@@ -135,6 +142,32 @@ function startServer() {
         } catch (error) {
             console.error(error);
             res.status(500).send('Failed to get user');
+        }
+    });
+
+    app.get('/picture', async (req, res) => {
+        const userID = req.query.user_id;
+
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+
+            if (user) {
+                if (!user.profile_picture) {
+                    res.status(404).send('User has no picture');
+                    return;
+                }
+                const buffer = Buffer.from(user.profile_picture);
+                res.writeHead(200, {
+                    'Content-Type': 'image/png',
+                    'Content-Length': buffer.length,
+                });
+                res.status(200).end(buffer);
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to get picture');
         }
     });
 
@@ -178,6 +211,15 @@ function startServer() {
         const userID = req.query.user_id;
         const pictureByteArray = req.body.picture;
 
+        if (!userID) {
+            res.status(400).send('Missing UserID');
+            return;
+        }
+        if (!pictureByteArray) {
+            res.status(400).send('Missing picture');
+            return;
+        }
+
         try {
             const user = await User.findOne({ where: { user_id: userID } });
 
@@ -206,36 +248,16 @@ function startServer() {
         }
     });
 
-    app.get('/picture', async (req, res) => {
-        const userID = req.query.user_id;
-
-        try {
-            const user = await User.findOne({ where: { user_id: userID } });
-
-            if (user) {
-                if (!user.profile_picture) {
-                    res.status(404).send('User has no picture');
-                    return;
-                }
-                const buffer = Buffer.from(user.profile_picture);
-                res.writeHead(200, {
-                    'Content-Type': 'image/png',
-                    'Content-Length': buffer.length,
-                });
-                res.status(200).end(buffer);
-            } else {
-                res.status(404).send('User not found');
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Failed to get picture');
-        }
-    });
-
     app.put('/user/password', async (req, res) => {
         const userID = req.query.user_id;
         const oldPassword = req.query.old_password;
         const newPassword = req.query.new_password;
+
+        if (!userID || !oldPassword || !newPassword) {
+            res.status(400).send('Missing required fields');
+            return;
+        }
+
         try {
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {
@@ -258,6 +280,12 @@ function startServer() {
     app.put('/user/country', async (req, res) => {
         const userID = req.query.user_id;
         const newCountry = req.query.country;
+
+        if (!userID || !newCountry) {
+            res.status(400).send('Missing required fields');
+            return;
+        }
+
         try {
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {

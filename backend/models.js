@@ -71,7 +71,7 @@ export const User = sequelize.define('User', {
     },
 });
 
-export async function syncAndSeed() {
+export async function syncAndSeedDatabase() {
     await sequelize.sync();
 
     const { count } = await User.findAndCountAll();
