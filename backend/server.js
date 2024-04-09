@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import express from 'express';
-import * as fileType from 'file-type';
+import { fileTypeFromBuffer } from 'file-type';
 import { Sequelize } from 'sequelize';
 import sharp from 'sharp';
 import { User, syncAndSeed } from './models.js';
@@ -183,8 +183,7 @@ function startServer() {
 
             if (user) {
                 const imageBuffer = Buffer.from(pictureByteArray, 'hex');
-                const type = await fileType.fromBuffer(imageBuffer);
-                console.log(type);
+                const type = await fileTypeFromBuffer(imageBuffer);
 
                 if (type.mime !== 'image/png') {
                     res.status(400).send('Invalid image format');
@@ -196,6 +195,7 @@ function startServer() {
                     .toBuffer();
                 // fs.writeFileSync('image.png', resizedImageBuffer); // If you want to save the image to disk
                 user.profile_picture = resizedImageBuffer;
+                await user.save();
                 res.status(200).send('Picture uploaded successfully');
             } else {
                 res.status(404).send('User not found');
@@ -213,6 +213,10 @@ function startServer() {
             const user = await User.findOne({ where: { user_id: userID } });
 
             if (user) {
+                if (!user.profile_picture) {
+                    res.status(404).send('User has no picture');
+                    return;
+                }
                 const buffer = Buffer.from(user.profile_picture);
                 res.writeHead(200, {
                     'Content-Type': 'image/png',
