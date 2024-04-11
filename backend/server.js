@@ -155,7 +155,9 @@ function startServer() {
                     res.status(404).send('User has no picture');
                     return;
                 }
-                const buffer = Buffer.from(user.profile_picture);
+
+                const buffer = fs.readFileSync(`.${user.profile_picture}`);
+
                 res.writeHead(200, {
                     'Content-Type': 'image/png',
                     'Content-Length': buffer.length,
@@ -234,7 +236,9 @@ function startServer() {
                 const resizedImageBuffer = await sharp(imageBuffer)
                     .resize({ width: 150, height: 150 })
                     .toBuffer();
-                user.profile_picture = resizedImageBuffer;
+
+                fs.writeFileSync(`./profile_pictures/${userID}.png`, resizedImageBuffer);
+                user.profile_picture = '/profile_pictures/' + userID + '.png';
                 await user.save();
                 res.status(200).send('Picture uploaded successfully');
             } else {

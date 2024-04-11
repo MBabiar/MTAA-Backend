@@ -11,11 +11,11 @@ const serverPort = 8080;
 app.use(express.json());
 
 const params = {
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
+    host: 'localhost',
+    database: 'postgres',
+    user: 'postgres',
+    password: 'root',
+    port: 5432,
 };
 
 const sequelize = new Sequelize(params.database, params.user, params.password, {
@@ -156,7 +156,9 @@ function startServer() {
                     res.status(404).send('User has no picture');
                     return;
                 }
-                const buffer = Buffer.from(user.profile_picture);
+
+                const buffer = fs.readFileSync(`.${user.profile_picture}`);
+
                 res.writeHead(200, {
                     'Content-Type': 'image/png',
                     'Content-Length': buffer.length,
