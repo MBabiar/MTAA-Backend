@@ -1,12 +1,13 @@
-const { Sequelize } = require('sequelize');
-const { User } = require('./models');
-const bcrypt = require('bcrypt');
+import bcrypt from 'bcrypt';
+import { Sequelize } from 'sequelize';
+import { User } from './models.js';
+
 const params = {
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
+    host: 'localhost',
+    database: 'postgres',
+    user: 'postgres',
+    password: 'root',
+    port: 5432,
 };
 
 const sequelize = new Sequelize(params.database, params.user, params.password, {
@@ -16,7 +17,7 @@ const sequelize = new Sequelize(params.database, params.user, params.password, {
     logging: false,
 });
 
-function seed() {
+export function seed() {
     const users = [
         {
             name: 'Alice',
@@ -163,7 +164,3 @@ function seed() {
             console.error(error);
         });
 }
-
-module.exports = {
-    seed,
-};

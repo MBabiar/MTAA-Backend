@@ -1,8 +1,10 @@
 {
     "name": "mtaa-backend",
+    "type": "module",
     "dependencies": {
         "bcrypt": "^5.1.1",
         "express": "^4.19.2",
+        "file-type": "^19.0.0",
         "pg": "^8.11.3",
         "sequelize": "^6.37.2",
         "sharp": "^0.33.3",
