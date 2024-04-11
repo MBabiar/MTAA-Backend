@@ -14,14 +14,14 @@ skinparam class {
 table(users) {
     primary_key(user_id) value(UUID)
     --
-    column(name) value(VARCHAR)
-    column(email) value(VARCHAR)
-    column(password) value(VARCHAR)
-    column(profile_picture) value(BYTEA)
+    column(name) value(VARCHAR NOT NULL)
+    column(email) value(VARCHAR NOT NULL)
+    column(password) value(VARCHAR NOT NULL)
+    column(profile_picture) value(VARCHAR)
     column(country) value(VARCHAR)
-    column(games_played) value(INTEGER)
-    column(won) value(INTEGER)
-    column(lost) value(INTEGER)
+    column(games_played) value(INTEGER NOT NULL DEFUALT=0)
+    column(won) value(INTEGER NOT NULL DEFUALT=0)
+    column(lost) value(INTEGER NOT NULL DEFUALT=0)
 }
 
 @enduml

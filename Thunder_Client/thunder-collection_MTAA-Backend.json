@@ -1,7 +1,7 @@
 {
     "client": "Thunder Client",
     "collectionName": "MTAA-Backend",
-    "dateExported": "2024-04-09T09:37:51.038Z",
+    "dateExported": "2024-04-11T14:47:12.587Z",
     "version": "1.1",
     "folders": [],
     "requests": [
@@ -65,16 +65,16 @@
             "colId": "5a258b34-0eb6-457e-b357-6218ebf42af5",
             "containerId": "",
             "name": "Get User Info",
-            "url": "http://localhost:8080/user?user_id=89d8b70c-cf7f-48ae-af7a-1ae06b98cf50",
+            "url": "http://localhost:8080/user?user_id=62fa1b9b-35b0-410c-834f-d87fa9213b5d",
             "method": "GET",
             "sortNum": 25000,
             "created": "2024-03-31T19:43:32.996Z",
-            "modified": "2024-04-09T09:35:30.664Z",
+            "modified": "2024-04-11T13:05:22.340Z",
             "headers": [],
             "params": [
                 {
                     "name": "user_id",
-                    "value": "89d8b70c-cf7f-48ae-af7a-1ae06b98cf50",
+                    "value": "62fa1b9b-35b0-410c-834f-d87fa9213b5d",
                     "isPath": false
                 }
             ],
@@ -85,16 +85,16 @@
             "colId": "5a258b34-0eb6-457e-b357-6218ebf42af5",
             "containerId": "",
             "name": "Put User Profile Picture",
-            "url": "http://localhost:8080/picture?user_id=3fe3194a-6099-4173-a8ae-fa4c0a8b6a54",
+            "url": "http://localhost:8080/picture?user_id=62fa1b9b-35b0-410c-834f-d87fa9213b5d",
             "method": "PUT",
             "sortNum": 26250,
             "created": "2024-04-08T14:21:28.174Z",
-            "modified": "2024-04-08T20:56:35.954Z",
+            "modified": "2024-04-11T13:05:41.601Z",
             "headers": [],
             "params": [
                 {
                     "name": "user_id",
-                    "value": "3fe3194a-6099-4173-a8ae-fa4c0a8b6a54",
+                    "value": "62fa1b9b-35b0-410c-834f-d87fa9213b5d",
                     "isPath": false
                 }
             ],
@@ -110,16 +110,16 @@
             "colId": "5a258b34-0eb6-457e-b357-6218ebf42af5",
             "containerId": "",
             "name": "Get User Profile Picture",
-            "url": "http://localhost:8080/picture?user_id=e51ff085-91ef-4716-94b4-c2f03143d3e7",
+            "url": "http://localhost:8080/picture?user_id=62fa1b9b-35b0-410c-834f-d87fa9213b5d",
             "method": "GET",
             "sortNum": 26875,
             "created": "2024-04-08T14:22:31.974Z",
-            "modified": "2024-04-08T15:32:11.817Z",
+            "modified": "2024-04-11T13:05:35.986Z",
             "headers": [],
             "params": [
                 {
                     "name": "user_id",
-                    "value": "e51ff085-91ef-4716-94b4-c2f03143d3e7",
+                    "value": "62fa1b9b-35b0-410c-834f-d87fa9213b5d",
                     "isPath": false
                 }
             ],

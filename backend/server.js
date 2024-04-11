@@ -1,16 +1,20 @@
 import bcrypt from 'bcrypt';
 import express from 'express';
 import { fileTypeFromBuffer } from 'file-type';
+import fs from 'fs';
+import http from 'http';
 import { Sequelize } from 'sequelize';
 import sharp from 'sharp';
 import { Server } from 'socket.io';
 import { User, syncAndSeedDatabase } from './models.js';
 
+const appPort = 8080;
+
 const app = express();
-const serverPort = 8080;
 app.use(express.json());
 
-const io = new Server(ws);
+const httpServer = http.createServer(app);
+const io = new Server(httpServer);
 
 const params = {
     host: process.env.DB_HOST,
@@ -46,8 +50,31 @@ async function startServer() {
 
     startWebsocketServer();
 
-    app.listen(serverPort, () => {
-        console.log(`Server is listening at http://localhost:${serverPort} `);
+    httpServer.listen(appPort, () => {
+        console.log(`Server is listening at http://localhost:${appPort} `);
+    });
+
+    app.get('/', (req, res) => {
+        res.status(200).send(`<!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="utf-8" />
+                <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+            </head>
+            <body>
+                <script type="module" src="/websocket.js"></script>
+            </body>
+        </html>`);
+    });
+
+    app.get('/websocket.js', (req, res) => {
+        fs.readFile('websocket.js', (err, data) => {
+            if (err) {
+                res.status(404).type('text/plain').send('Not Found');
+            } else {
+                res.status(200).type('application/javascript').send(data);
+            }
+        });
     });
 
     app.post('/register', async (req, res) => {
@@ -316,9 +343,12 @@ async function startWebsocketServer() {
         return Math.random().toString(36).substring(2, 15);
     }
 
-    function getGameIdBySocketId(socketId) {
+    function getGameIdBySocketId(socket) {
+        if (!socket.rooms) {
+            return null;
+        }
         for (const room of Object.values(socket.rooms)) {
-            if (room !== socketId) {
+            if (room !== socket.id) {
                 return room;
             }
         }
@@ -327,6 +357,7 @@ async function startWebsocketServer() {
 
     io.on('connection', (socket) => {
         socket.on('findGame', () => {
+            console.log('User looking for game');
             if (waitingPlayers.length > 0) {
                 const opponent = waitingPlayers.pop();
                 const gameId = generateGameId();
@@ -337,6 +368,7 @@ async function startWebsocketServer() {
                 opponent.emit('gameStart', { gameId, color: 'white' });
                 socket.emit('gameStart', { gameId, color: 'black' });
             } else {
+                console.log('User added to queue');
                 waitingPlayers.push(socket);
             }
         });
@@ -355,6 +387,8 @@ async function startWebsocketServer() {
                 socket.to(gameId).emit('resign');
             }
             waitingPlayers = waitingPlayers.filter((player) => player.id !== socket.id);
+            console.log('User disconnected');
+            console.log(waitingPlayers);
         });
     });
 }

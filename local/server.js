@@ -2,13 +2,19 @@ import bcrypt from 'bcrypt';
 import express from 'express';
 import { fileTypeFromBuffer } from 'file-type';
 import fs from 'fs';
+import http from 'http';
 import { Sequelize } from 'sequelize';
 import sharp from 'sharp';
+import { Server } from 'socket.io';
 import { User, syncAndSeedDatabase } from './models.js';
 
+const appPort = 8080;
+
 const app = express();
-const serverPort = 8080;
 app.use(express.json());
+
+const httpServer = http.createServer(app);
+const io = new Server(httpServer);
 
 const params = {
     host: 'localhost',
@@ -17,7 +23,6 @@ const params = {
     password: 'root',
     port: 5432,
 };
-
 const sequelize = new Sequelize(params.database, params.user, params.password, {
     host: params.host,
     port: params.port,
@@ -39,11 +44,36 @@ async function connectToDBWithRetry() {
 }
 
 // Server with RESTFUL API
-function startServer() {
-    syncAndSeedDatabase();
+async function startServer() {
+    await syncAndSeedDatabase();
 
-    app.listen(serverPort, () => {
-        console.log(`Server is listening at http://localhost:${serverPort} `);
+    startWebsocketServer();
+
+    httpServer.listen(appPort, () => {
+        console.log(`Server is listening at http://localhost:${appPort} `);
+    });
+
+    app.get('/', (req, res) => {
+        res.status(200).send(`<!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="utf-8" />
+                <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+            </head>
+            <body>
+                <script type="module" src="/websocket.js"></script>
+            </body>
+        </html>`);
+    });
+
+    app.get('/websocket.js', (req, res) => {
+        fs.readFile('websocket.js', (err, data) => {
+            if (err) {
+                res.status(404).type('text/plain').send('Not Found');
+            } else {
+                res.status(200).type('application/javascript').send(data);
+            }
+        });
     });
 
     app.post('/register', async (req, res) => {
@@ -302,6 +332,57 @@ function startServer() {
             console.error(error);
             res.status(500).send('Failed to update country');
         }
+    });
+}
+
+async function startWebsocketServer() {
+    let waitingPlayers = [];
+
+    function generateGameId() {
+        return Math.random().toString(36).substring(2, 15);
+    }
+
+    function getGameIdBySocketId(socket) {
+        for (const room of Object.values(socket.rooms)) {
+            if (room !== socket.id) {
+                return room;
+            }
+        }
+        return null;
+    }
+
+    io.on('connection', (socket) => {
+        socket.on('findGame', () => {
+            if (waitingPlayers.length > 0) {
+                const opponent = waitingPlayers.pop();
+                const gameId = generateGameId();
+
+                opponent.join(gameId);
+                socket.join(gameId);
+
+                opponent.emit('gameStart', { gameId, color: 'white' });
+                socket.emit('gameStart', { gameId, color: 'black' });
+            } else {
+                console.log('User added to queue');
+                waitingPlayers.push(socket);
+            }
+        });
+
+        socket.on('move', (data) => {
+            socket.to(data.gameId).emit('move', data.move);
+        });
+
+        socket.on('resign', (gameId) => {
+            socket.to(gameId).emit('resign');
+        });
+
+        socket.on('disconnect', () => {
+            const gameId = getGameIdBySocketId(socket.id);
+            if (gameId) {
+                socket.to(gameId).emit('resign');
+            }
+            waitingPlayers = waitingPlayers.filter((player) => player.id !== socket.id);
+        });
     });
 }
 
