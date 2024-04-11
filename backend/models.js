@@ -76,6 +76,6 @@ export async function syncAndSeedDatabase() {
 
     const { count } = await User.findAndCountAll();
     if (count === 0) {
-        seed();
+        await seed();
     }
 }

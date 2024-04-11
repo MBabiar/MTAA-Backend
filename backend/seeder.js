@@ -17,7 +17,7 @@ const sequelize = new Sequelize(params.database, params.user, params.password, {
     logging: false,
 });
 
-export function seed() {
+export async function seed() {
     const users = [
         {
             name: 'Alice',

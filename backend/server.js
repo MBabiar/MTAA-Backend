@@ -9,6 +9,8 @@ const app = express();
 const serverPort = 8080;
 app.use(express.json());
 
+const io = new Server(server);
+
 const params = {
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
@@ -38,8 +40,10 @@ async function connectToDBWithRetry() {
 }
 
 // Server with RESTFUL API
-function startServer() {
-    syncAndSeedDatabase();
+async function startServer() {
+    await syncAndSeedDatabase();
+
+    startWebsocketServer();
 
     app.listen(serverPort, () => {
         console.log(`Server is listening at http://localhost:${serverPort} `);
@@ -301,6 +305,43 @@ function startServer() {
             console.error(error);
             res.status(500).send('Failed to update country');
         }
+    });
+}
+
+async function startWebsocketServer() {
+    let waitingPlayers = [];
+
+    function generateGameId() {
+        return Math.random().toString(36).substring(2, 15);
+    }
+
+    io.on('connection', (socket) => {
+        socket.on('findGame', () => {
+            if (waitingPlayers.length > 0) {
+                const opponent = waitingPlayers.pop();
+                const gameId = generateGameId();
+
+                opponent.join(gameId);
+                socket.join(gameId);
+
+                opponent.emit('gameStart', { gameId, color: 'white' });
+                socket.emit('gameStart', { gameId, color: 'black' });
+            } else {
+                waitingPlayers.push(socket);
+            }
+        });
+
+        socket.on('move', (data) => {
+            socket.to(data.gameId).emit('move', data.move);
+        });
+
+        socket.on('resign', (gameId) => {
+            socket.to(gameId).emit('resign');
+        });
+
+        socket.on('disconnect', () => {
+            waitingPlayers = waitingPlayers.filter((player) => player.id !== socket.id);
+        });
     });
 }
 
