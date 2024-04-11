@@ -3,13 +3,14 @@ import express from 'express';
 import { fileTypeFromBuffer } from 'file-type';
 import { Sequelize } from 'sequelize';
 import sharp from 'sharp';
+import { Server } from 'socket.io';
 import { User, syncAndSeedDatabase } from './models.js';
 
 const app = express();
 const serverPort = 8080;
 app.use(express.json());
 
-const io = new Server(server);
+const io = new Server(ws);
 
 const params = {
     host: process.env.DB_HOST,
@@ -315,6 +316,15 @@ async function startWebsocketServer() {
         return Math.random().toString(36).substring(2, 15);
     }
 
+    function getGameIdBySocketId(socketId) {
+        for (const room of Object.values(socket.rooms)) {
+            if (room !== socketId) {
+                return room;
+            }
+        }
+        return null;
+    }
+
     io.on('connection', (socket) => {
         socket.on('findGame', () => {
             if (waitingPlayers.length > 0) {
@@ -340,6 +350,10 @@ async function startWebsocketServer() {
         });
 
         socket.on('disconnect', () => {
+            const gameId = getGameIdBySocketId(socket.id);
+            if (gameId) {
+                socket.to(gameId).emit('resign');
+            }
             waitingPlayers = waitingPlayers.filter((player) => player.id !== socket.id);
         });
     });
