@@ -1,21 +1,5 @@
 import bcrypt from 'bcrypt';
-import { Sequelize } from 'sequelize';
 import { User } from './models.js';
-
-const params = {
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-};
-
-const sequelize = new Sequelize(params.database, params.user, params.password, {
-    host: params.host,
-    port: params.port,
-    dialect: 'postgres',
-    logging: false,
-});
 
 export async function seed() {
     const users = [

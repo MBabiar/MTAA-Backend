@@ -49,8 +49,22 @@ async function startServer() {
 
     startWebsocketServer();
 
-    httpServer.listen(appPort, () => {
-        console.log(`Server is listening at http://localhost:${appPort} `);
+    httpServer.listen(appPort, '0.0.0.0', () => {
+        console.log(
+            'Server listening:',
+            `http://${httpServer.address().address}:${httpServer.address().port}`
+        );
+    });
+
+    app.get('/testing', (req, res) => {
+        res.status(200).send('Hello World');
+    });
+
+    app.get('/testing2', (req, res) => {
+        const email = req.query.email;
+        const password = req.query.password;
+        console.log(email, password);
+        res.status(200).send('Hello World');
     });
 
     app.get('/', (req, res) => {
@@ -64,16 +78,6 @@ async function startServer() {
                 <script type="module" src="/websocket.js"></script>
             </body>
         </html>`);
-    });
-
-    app.get('/websocket.js', (req, res) => {
-        fs.readFile('websocket.js', (err, data) => {
-            if (err) {
-                res.status(404).type('text/plain').send('Not Found');
-            } else {
-                res.status(200).type('application/javascript').send(data);
-            }
-        });
     });
 
     app.post('/register', async (req, res) => {
@@ -343,6 +347,9 @@ async function startWebsocketServer() {
     }
 
     function getGameIdBySocketId(socket) {
+        if (!socket.rooms) {
+            return null;
+        }
         for (const room of Object.values(socket.rooms)) {
             if (room !== socket.id) {
                 return room;
@@ -353,6 +360,7 @@ async function startWebsocketServer() {
 
     io.on('connection', (socket) => {
         socket.on('findGame', () => {
+            console.log('User looking for game');
             if (waitingPlayers.length > 0) {
                 const opponent = waitingPlayers.pop();
                 const gameId = generateGameId();
@@ -382,6 +390,8 @@ async function startWebsocketServer() {
                 socket.to(gameId).emit('resign');
             }
             waitingPlayers = waitingPlayers.filter((player) => player.id !== socket.id);
+            console.log('User disconnected');
+            console.log(waitingPlayers);
         });
     });
 }

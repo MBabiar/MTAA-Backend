@@ -8,4 +8,6 @@ RUN npm install
 
 COPY backend/ .
 
+EXPOSE 8080
+
 CMD ["npm", "start"]

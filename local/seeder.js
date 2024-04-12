@@ -1,21 +1,5 @@
 import bcrypt from 'bcrypt';
-import { Sequelize } from 'sequelize';
 import { User } from './models.js';
-
-const params = {
-    host: 'localhost',
-    database: 'postgres',
-    user: 'postgres',
-    password: 'root',
-    port: 5432,
-};
-
-const sequelize = new Sequelize(params.database, params.user, params.password, {
-    host: params.host,
-    port: params.port,
-    dialect: 'postgres',
-    logging: false,
-});
 
 export function seed() {
     const users = [
