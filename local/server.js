@@ -391,7 +391,6 @@ async function startWebsocketServer() {
 
     io.on('connection', (socket) => {
         socket.on('findGame', () => {
-            console.log('User looking for game');
             if (waitingPlayers.length > 0) {
                 const opponent = waitingPlayers.pop();
                 const gameId = generateGameId();
@@ -402,7 +401,6 @@ async function startWebsocketServer() {
                 opponent.emit('gameStart', { gameId, color: 'white' });
                 socket.emit('gameStart', { gameId, color: 'black' });
             } else {
-                console.log('User added to queue');
                 waitingPlayers.push(socket);
             }
         });
@@ -412,17 +410,16 @@ async function startWebsocketServer() {
         });
 
         socket.on('resign', (gameId) => {
+            socket.hasResigned = true;
             socket.to(gameId).emit('resign');
         });
 
         socket.on('disconnect', () => {
             const gameId = getGameIdBySocketId(socket.id);
-            if (gameId) {
+            if (gameId && !socket.hasResigned) {
                 socket.to(gameId).emit('resign');
             }
             waitingPlayers = waitingPlayers.filter((player) => player.id !== socket.id);
-            console.log('User disconnected');
-            console.log(waitingPlayers);
         });
     });
 }
