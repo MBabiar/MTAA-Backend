@@ -1,13 +1,6 @@
 import { Sequelize } from 'sequelize';
+import { params } from './config.js';
 import { seed } from './seeder.js';
-
-const params = {
-    host: 'localhost',
-    database: 'postgres',
-    user: 'postgres',
-    password: 'root',
-    port: 5432,
-};
 
 const sequelize = new Sequelize(params.database, params.user, params.password, {
     host: params.host,
@@ -23,7 +16,7 @@ export const User = sequelize.define('User', {
         allowNull: false,
         primaryKey: true,
     },
-    name: {
+    username: {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {

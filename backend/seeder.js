@@ -1,10 +1,10 @@
 import bcrypt from 'bcrypt';
 import { User } from './models.js';
 
-export async function seed() {
+export function seed() {
     const users = [
         {
-            name: 'Alice',
+            username: 'Alice',
             email: 'alice@gmail.com',
             password: bcrypt.hashSync('alice123', 10),
             country: 'USA',
@@ -13,7 +13,7 @@ export async function seed() {
             lost: 5,
         },
         {
-            name: 'Bob',
+            username: 'Bob',
             email: 'bob@gmail.com',
             password: bcrypt.hashSync('bob123', 10),
             country: 'UK',
@@ -22,7 +22,7 @@ export async function seed() {
             lost: 7,
         },
         {
-            name: 'Charlie',
+            username: 'Charlie',
             email: 'charlie@gmail.com',
             password: bcrypt.hashSync('charlie123', 10),
             country: 'Canada',
@@ -31,7 +31,7 @@ export async function seed() {
             lost: 4,
         },
         {
-            name: 'Dave',
+            username: 'Dave',
             email: 'dave@gmail.com',
             password: bcrypt.hashSync('dave123', 10),
             country: 'Australia',
@@ -40,7 +40,7 @@ export async function seed() {
             lost: 4,
         },
         {
-            name: 'Eve',
+            username: 'Eve',
             email: 'eve@gmail.com',
             password: bcrypt.hashSync('eve123', 10),
             country: 'Germany',
@@ -49,7 +49,7 @@ export async function seed() {
             lost: 4,
         },
         {
-            name: 'Frank',
+            username: 'Frank',
             email: 'frank@gmail.com',
             password: bcrypt.hashSync('frank123', 10),
             country: 'France',
@@ -58,7 +58,7 @@ export async function seed() {
             lost: 3,
         },
         {
-            name: 'Grace',
+            username: 'Grace',
             email: 'grace@gmail.com',
             password: bcrypt.hashSync('grace123', 10),
             country: 'Spain',
@@ -67,7 +67,7 @@ export async function seed() {
             lost: 4,
         },
         {
-            name: 'Henry',
+            username: 'Henry',
             email: 'henry@gmail.com',
             password: bcrypt.hashSync('henry123', 10),
             country: 'Italy',
@@ -76,7 +76,7 @@ export async function seed() {
             lost: 4,
         },
         {
-            name: 'Ivy',
+            username: 'Ivy',
             email: 'ivy@gmail.com',
             password: bcrypt.hashSync('ivy123', 10),
             country: 'Netherlands',
@@ -85,7 +85,7 @@ export async function seed() {
             lost: 3,
         },
         {
-            name: 'Jack',
+            username: 'Jack',
             email: 'jack@gmail.com',
             password: bcrypt.hashSync('jack123', 10),
             country: 'New Zealand',
@@ -94,7 +94,7 @@ export async function seed() {
             lost: 2,
         },
         {
-            name: 'Kate',
+            username: 'Kate',
             email: 'kate@gmail.com',
             password: bcrypt.hashSync('kate123', 10),
             country: 'Australia',
@@ -103,7 +103,7 @@ export async function seed() {
             lost: 4,
         },
         {
-            name: 'Liam',
+            username: 'Liam',
             email: 'liam@gmail.com',
             password: bcrypt.hashSync('liam123', 10),
             country: 'USA',
@@ -112,7 +112,7 @@ export async function seed() {
             lost: 4,
         },
         {
-            name: 'Mia',
+            username: 'Mia',
             email: 'mia@gmail.com',
             password: bcrypt.hashSync('mia123', 10),
             country: 'Canada',
@@ -121,7 +121,7 @@ export async function seed() {
             lost: 4,
         },
         {
-            name: 'Noah',
+            username: 'Noah',
             email: 'noah@gmail.com',
             password: bcrypt.hashSync('noah123', 10),
             country: 'UK',
@@ -130,7 +130,7 @@ export async function seed() {
             lost: 4,
         },
         {
-            name: 'Olivia',
+            username: 'Olivia',
             email: 'olivia@gmail.com',
             password: bcrypt.hashSync('olivia123', 10),
             country: 'Germany',

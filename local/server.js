@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import cors from 'cors';
 import express from 'express';
 import { fileTypeFromBuffer } from 'file-type';
 import fs from 'fs';
@@ -6,23 +7,18 @@ import http from 'http';
 import { Sequelize } from 'sequelize';
 import sharp from 'sharp';
 import { Server } from 'socket.io';
+import { params } from './config.js';
 import { User, syncAndSeedDatabase } from './models.js';
 
 const appPort = 8080;
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 const httpServer = http.createServer(app);
 const io = new Server(httpServer);
 
-const params = {
-    host: 'localhost',
-    database: 'postgres',
-    user: 'postgres',
-    password: 'root',
-    port: 5432,
-};
 const sequelize = new Sequelize(params.database, params.user, params.password, {
     host: params.host,
     port: params.port,
@@ -49,6 +45,11 @@ async function startServer() {
 
     startWebsocketServer();
 
+    const usernameRegex = /^[a-zA-Z\s]+$/;
+    const emailRegex = /^([a-zA-Z0-9]+)@([a-zA-Z0]+)\.([a-zA-Z]+)$/;
+    const passwordRegex = /^[a-zA-Z0-9]{6,}$/;
+    const countryRegex = /^[a-zA-Z\s]+$/;
+
     httpServer.listen(appPort, '0.0.0.0', () => {
         console.log(
             'Server listening:',
@@ -56,17 +57,7 @@ async function startServer() {
         );
     });
 
-    app.get('/testing', (req, res) => {
-        res.status(200).send('Hello World');
-    });
-
-    app.get('/testing2', (req, res) => {
-        const email = req.query.email;
-        const password = req.query.password;
-        console.log(email, password);
-        res.status(200).send('Hello World');
-    });
-
+    // API for websocket testing
     app.get('/', (req, res) => {
         res.status(200).send(`<!DOCTYPE html>
         <html>
@@ -82,28 +73,38 @@ async function startServer() {
 
     app.post('/register', async (req, res) => {
         const newUser = {
-            name: req.query.username,
+            username: req.query.username,
             email: req.query.email,
+            password: req.query.password,
             hashedPassword: bcrypt.hashSync(req.query.password, 10),
         };
 
-        if (!newUser.name || !newUser.email || !newUser.hashedPassword) {
+        if (!newUser.username || !newUser.email || !newUser.hashedPassword) {
             res.status(400).send('Missing required fields');
+            return;
+        } else if (!emailRegex.test(newUser.email)) {
+            res.status(400).send('Invalid email format');
+            return;
+        } else if (!usernameRegex.test(newUser.username)) {
+            res.status(400).send('Invalid username format');
+            return;
+        } else if (!passwordRegex.test(newUser.password)) {
+            res.status(400).send('Invalid password format');
             return;
         }
 
         try {
             await User.create({
-                name: newUser.name,
+                username: newUser.username,
                 email: newUser.email,
                 password: newUser.hashedPassword,
             });
 
             res.status(200).send('User registered successfully');
         } catch (error) {
-            if (error.name === 'SequelizeUniqueConstraintError') {
+            if (error.username === 'SequelizeUniqueConstraintError') {
                 res.status(400).send('Email already exists');
-            } else if (error.name === 'SequelizeValidationError') {
+            } else if (error.username === 'SequelizeValidationError') {
                 const errors = error.errors.map((err) => err.message);
                 res.status(400).send(errors);
             } else {
@@ -119,14 +120,21 @@ async function startServer() {
         if (!email || !password) {
             res.status(400).send('Missing required fields');
             return;
+        } else if (!emailRegex.test(email)) {
+            res.status(400).send('Invalid email format');
+            return;
+        } else if (!passwordRegex.test(password)) {
+            res.status(400).send('Invalid password format');
+            return;
         }
 
         try {
             const user = await User.findOne({ where: { email } });
             if (user && bcrypt.compareSync(password, user.password)) {
-                res.status(200).send(user.user_id);
+                const dataJson = { userID: user.user_id };
+                res.status(200).send(dataJson);
             } else {
-                res.status(401).send('Invalid email or password');
+                res.status(401).send('User does not exist or password is incorrect');
             }
         } catch (error) {
             console.error(error);
@@ -137,10 +145,10 @@ async function startServer() {
     app.get('/leaderboard', async (req, res) => {
         try {
             const users = await User.findAll({
-                attributes: ['name', 'won'],
+                attributes: ['username', 'won'],
                 order: [
                     ['won', 'DESC'],
-                    ['name', 'ASC'],
+                    ['username', 'ASC'],
                 ],
                 limit: 100,
             });
@@ -155,7 +163,7 @@ async function startServer() {
         const userID = req.query.user_id;
 
         if (!userID) {
-            res.status(400).send('Missing required fields');
+            res.status(400).send('Missing UserID');
             return;
         }
 
@@ -163,7 +171,7 @@ async function startServer() {
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {
                 const userInfo = {
-                    username: user.name,
+                    username: user.username,
                     country: user.country,
                     games_played: user.games_played,
                     won: user.won,
@@ -181,6 +189,11 @@ async function startServer() {
 
     app.get('/picture', async (req, res) => {
         const userID = req.query.user_id;
+
+        if (!userID) {
+            res.status(400).send('Missing UserID');
+            return;
+        }
 
         try {
             const user = await User.findOne({ where: { user_id: userID } });
@@ -209,6 +222,12 @@ async function startServer() {
 
     app.put('/user/won', async (req, res) => {
         const userID = req.query.user_id;
+
+        if (!userID) {
+            res.status(400).send('Missing UserID');
+            return;
+        }
+
         try {
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {
@@ -227,6 +246,12 @@ async function startServer() {
 
     app.put('/user/lost', async (req, res) => {
         const userID = req.query.user_id;
+
+        if (!userID) {
+            res.status(400).send('Missing UserID');
+            return;
+        }
+
         try {
             const user = await User.findOne({ where: { user_id: userID } });
             if (user) {
@@ -293,6 +318,9 @@ async function startServer() {
         if (!userID || !oldPassword || !newPassword) {
             res.status(400).send('Missing required fields');
             return;
+        } else if (!passwordRegex.test(newPassword)) {
+            res.status(400).send('Invalid new password format');
+            return;
         }
 
         try {
@@ -320,6 +348,9 @@ async function startServer() {
 
         if (!userID || !newCountry) {
             res.status(400).send('Missing required fields');
+            return;
+        } else if (!countryRegex.test(newCountry)) {
+            res.status(400).send('Invalid country format');
             return;
         }
 

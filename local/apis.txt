@@ -13,6 +13,6 @@ After Match
 -   Change for both players: Games Played / Wins / Losses ✔
 
 Change Profile Info
--   Change Profile Picture
--   Change Password
--   Change Country
+-   Change Profile Picture ✔
+-   Change Password ✔
+-   Change Country ✔

@@ -1,13 +1,6 @@
 import { Sequelize } from 'sequelize';
+import { params } from './config.js';
 import { seed } from './seeder.js';
-
-const params = {
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-};
 
 const sequelize = new Sequelize(params.database, params.user, params.password, {
     host: params.host,
@@ -23,11 +16,11 @@ export const User = sequelize.define('User', {
         allowNull: false,
         primaryKey: true,
     },
-    name: {
+    username: {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-            is: /^[a-z\s]+$/i,
+            is: /^[a-zA-Z\s]+$/,
         },
     },
     email: {
@@ -35,18 +28,21 @@ export const User = sequelize.define('User', {
         allowNull: false,
         unique: true,
         validate: {
-            isEmail: true,
+            is: /^([a-zA-Z0-9]+)@([a-zA-Z0]+)\.([a-zA-Z]+)$/,
         },
     },
     password: {
         type: Sequelize.STRING,
         allowNull: false,
+        validate: {
+            is: /^[a-zA-Z0-9]{6,}$/,
+        },
     },
     country: {
         type: Sequelize.STRING,
         allowNull: true,
         validate: {
-            is: /^[a-z\s]+$/i,
+            is: /^[a-zA-Z\s]+$/,
         },
         defaultValue: 'Not specified',
     },
@@ -66,7 +62,7 @@ export const User = sequelize.define('User', {
         allowNull: false,
     },
     profile_picture: {
-        type: Sequelize.BLOB,
+        type: Sequelize.STRING,
         allowNull: true,
     },
 });
@@ -76,6 +72,6 @@ export async function syncAndSeedDatabase() {
 
     const { count } = await User.findAndCountAll();
     if (count === 0) {
-        await seed();
+        seed();
     }
 }
