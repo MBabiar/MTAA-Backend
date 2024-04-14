@@ -5,9 +5,9 @@ Nas spustenie backendu je potrebné mať nainštalovaný Node.js a npm.
 
 Spustenie servera lokálne:
 
--   1. Navigácia do /local
--   2. Spustenie príkazu `npm install` alebo skrátený príkaz `npm i`
--   3. Spustenie príkazu `npm start`
+-   Navigácia do /local
+-   Spustenie príkazu `npm install` alebo skrátený príkaz `npm i`
+-   Spustenie príkazu `npm start`
 
 Spustenie servera na dockeri:
 
