@@ -79,6 +79,8 @@ async function startServer() {
             hashedPassword: bcrypt.hashSync(req.query.password, 10),
         };
 
+        console.log(newUser);
+
         if (!newUser.username || !newUser.email || !newUser.hashedPassword) {
             res.status(400).send('Missing required fields');
             return;
@@ -102,9 +104,9 @@ async function startServer() {
 
             res.status(200).send('User registered successfully');
         } catch (error) {
-            if (error.username === 'SequelizeUniqueConstraintError') {
+            if (error.name === 'SequelizeUniqueConstraintError') {
                 res.status(400).send('Email already exists');
-            } else if (error.username === 'SequelizeValidationError') {
+            } else if (error.nemae === 'SequelizeValidationError') {
                 const errors = error.errors.map((err) => err.message);
                 res.status(400).send(errors);
             } else {
