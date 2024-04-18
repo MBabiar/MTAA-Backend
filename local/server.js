@@ -202,7 +202,12 @@ async function startServer() {
 
             if (user) {
                 if (!user.profile_picture) {
-                    res.status(404).send('User has no picture');
+                    const buffer = fs.readFileSync('./profile_pictures/default.png');
+                    res.writeHead(200, {
+                        'Content-Type': 'image/png',
+                        'Content-Length': buffer.length,
+                    });
+                    res.status(200).end(buffer);
                     return;
                 }
 
