@@ -136,7 +136,7 @@ async function startServer() {
                 const dataJson = { userID: user.user_id };
                 res.status(200).send(dataJson);
             } else {
-                res.status(401).send('User does not exist or password is incorrect');
+                res.status(401).send();
             }
         } catch (error) {
             console.error(error);
@@ -189,7 +189,7 @@ async function startServer() {
         }
     });
 
-    app.get('/picture', async (req, res) => {
+    app.get('/user/picture', async (req, res) => {
         const userID = req.query.user_id;
 
         if (!userID) {
@@ -270,7 +270,7 @@ async function startServer() {
         }
     });
 
-    app.put('/picture', async (req, res) => {
+    app.put('/user/picture', async (req, res) => {
         const userID = req.query.user_id;
         const pictureByteArray = req.body.picture;
 
