@@ -4,6 +4,7 @@ import express from 'express';
 import { fileTypeFromBuffer } from 'file-type';
 import fs from 'fs';
 import http from 'http';
+import path from 'path';
 import { Sequelize } from 'sequelize';
 import sharp from 'sharp';
 import { Server } from 'socket.io';
@@ -201,20 +202,30 @@ async function startServer() {
             const user = await User.findOne({ where: { user_id: userID } });
 
             if (user) {
+                let filePath;
+                let contentType;
+
                 if (!user.profile_picture) {
-                    const buffer = fs.readFileSync('./profile_pictures/default.png');
-                    res.writeHead(200, {
-                        'Content-Type': 'image/png',
-                        'Content-Length': buffer.length,
-                    });
-                    res.status(200).end(buffer);
-                    return;
+                    filePath = './profile_pictures/default.png';
+                    contentType = 'image/png';
+                } else {
+                    filePath = `.${user.profile_picture}`;
+                    const ext = path.extname(filePath);
+                    if (ext === '.png') {
+                        contentType = 'image/png';
+                    }
+                    if (ext === '.jpg') {
+                        contentType = 'image/jpg';
+                    }
+                    if (ext === '.jpeg') {
+                        contentType = 'image/jpeg';
+                    }
                 }
 
-                const buffer = fs.readFileSync(`.${user.profile_picture}`);
+                const buffer = fs.readFileSync(filePath);
 
                 res.writeHead(200, {
-                    'Content-Type': 'image/png',
+                    'Content-Type': contentType,
                     'Content-Length': buffer.length,
                 });
                 res.status(200).end(buffer);
@@ -275,48 +286,6 @@ async function startServer() {
         }
     });
 
-    app.put('/user/picture', async (req, res) => {
-        const userID = req.query.user_id;
-        const pictureByteArray = req.body.picture;
-
-        if (!userID) {
-            res.status(400).send('Missing UserID');
-            return;
-        }
-        if (!pictureByteArray) {
-            res.status(400).send('Missing picture');
-            return;
-        }
-
-        try {
-            const user = await User.findOne({ where: { user_id: userID } });
-
-            if (user) {
-                const imageBuffer = Buffer.from(pictureByteArray, 'hex');
-                const type = await fileTypeFromBuffer(imageBuffer);
-
-                if (type.mime !== 'image/png') {
-                    res.status(400).send('Invalid image format');
-                    return;
-                }
-
-                const resizedImageBuffer = await sharp(imageBuffer)
-                    .resize({ width: 150, height: 150 })
-                    .toBuffer();
-
-                fs.writeFileSync(`./profile_pictures/${userID}.png`, resizedImageBuffer);
-                user.profile_picture = '/profile_pictures/' + userID + '.png';
-                await user.save();
-                res.status(200).send('Picture uploaded successfully');
-            } else {
-                res.status(404).send('User not found');
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Failed to upload picture');
-        }
-    });
-
     app.put('/user/password', async (req, res) => {
         const userID = req.query.user_id;
         const oldPassword = req.query.old_password;
@@ -373,6 +342,46 @@ async function startServer() {
         } catch (error) {
             console.error(error);
             res.status(500).send('Failed to update country');
+        }
+    });
+
+    app.put('/user/picture', async (req, res) => {
+        const userID = req.query.user_id;
+        const pictureByteArray = req.body.picture;
+
+        if (!userID || !pictureByteArray) {
+            res.status(400).send('Missing required fields');
+            return;
+        }
+
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+
+            if (user) {
+                const imageBuffer = Buffer.from(pictureByteArray, 'base64');
+                const type = await fileTypeFromBuffer(imageBuffer);
+
+                if (type.mime !== 'image/png' && type.mime !== 'image/jpeg' && type.mime !== 'image/jpg') {
+                    res.status(400).send('Invalid image format');
+                    return;
+                }
+
+                const extension = type.ext;
+                const resizedImageBuffer = await sharp(imageBuffer)
+                    .resize({ width: 150, height: 150 })
+                    .toFormat(extension)
+                    .toBuffer();
+
+                fs.writeFileSync(`./profile_pictures/${userID}.${extension}`, resizedImageBuffer);
+                user.profile_picture = '/profile_pictures/' + userID + '.' + extension;
+                await user.save();
+                res.status(200).send('Picture uploaded successfully');
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to upload picture');
         }
     });
 }
