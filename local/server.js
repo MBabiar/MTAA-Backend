@@ -366,6 +366,14 @@ async function startServer() {
                     return;
                 }
 
+                const extensions = ['png', 'jpeg', 'jpg'];
+                extensions.forEach((ext) => {
+                    const filePath = `./profile_pictures/${userID}.${ext}`;
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath);
+                    }
+                });
+
                 const extension = type.ext;
                 const resizedImageBuffer = await sharp(imageBuffer)
                     .resize({ width: 150, height: 150 })
