@@ -4,6 +4,7 @@ import express from 'express';
 import { fileTypeFromBuffer } from 'file-type';
 import fs from 'fs';
 import http from 'http';
+import path from 'path';
 import { Sequelize } from 'sequelize';
 import sharp from 'sharp';
 import { Server } from 'socket.io';
@@ -57,20 +58,6 @@ async function startServer() {
         );
     });
 
-    // API for websocket testing
-    app.get('/', (req, res) => {
-        res.status(200).send(`<!DOCTYPE html>
-        <html>
-            <head>
-                <meta charset="utf-8" />
-                <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-            </head>
-            <body>
-                <script type="module" src="/websocket.js"></script>
-            </body>
-        </html>`);
-    });
-
     app.post('/register', async (req, res) => {
         const newUser = {
             username: req.query.username,
@@ -102,9 +89,9 @@ async function startServer() {
 
             res.status(200).send('User registered successfully');
         } catch (error) {
-            if (error.username === 'SequelizeUniqueConstraintError') {
+            if (error.name === 'SequelizeUniqueConstraintError') {
                 res.status(400).send('Email already exists');
-            } else if (error.username === 'SequelizeValidationError') {
+            } else if (error.nemae === 'SequelizeValidationError') {
                 const errors = error.errors.map((err) => err.message);
                 res.status(400).send(errors);
             } else {
@@ -134,7 +121,7 @@ async function startServer() {
                 const dataJson = { userID: user.user_id };
                 res.status(200).send(dataJson);
             } else {
-                res.status(401).send('User does not exist or password is incorrect');
+                res.status(401).send();
             }
         } catch (error) {
             console.error(error);
@@ -187,7 +174,7 @@ async function startServer() {
         }
     });
 
-    app.get('/picture', async (req, res) => {
+    app.get('/user/picture', async (req, res) => {
         const userID = req.query.user_id;
 
         if (!userID) {
@@ -199,15 +186,30 @@ async function startServer() {
             const user = await User.findOne({ where: { user_id: userID } });
 
             if (user) {
+                let filePath;
+                let contentType;
+
                 if (!user.profile_picture) {
-                    res.status(404).send('User has no picture');
-                    return;
+                    filePath = './profile_pictures/default.png';
+                    contentType = 'image/png';
+                } else {
+                    filePath = `.${user.profile_picture}`;
+                    const ext = path.extname(filePath);
+                    if (ext === '.png') {
+                        contentType = 'image/png';
+                    }
+                    if (ext === '.jpg') {
+                        contentType = 'image/jpg';
+                    }
+                    if (ext === '.jpeg') {
+                        contentType = 'image/jpeg';
+                    }
                 }
 
-                const buffer = fs.readFileSync(`.${user.profile_picture}`);
+                const buffer = fs.readFileSync(filePath);
 
                 res.writeHead(200, {
-                    'Content-Type': 'image/png',
+                    'Content-Type': contentType,
                     'Content-Length': buffer.length,
                 });
                 res.status(200).end(buffer);
@@ -265,48 +267,6 @@ async function startServer() {
         } catch (error) {
             console.error(error);
             res.status(500).send('Failed to update user');
-        }
-    });
-
-    app.put('/picture', async (req, res) => {
-        const userID = req.query.user_id;
-        const pictureByteArray = req.body.picture;
-
-        if (!userID) {
-            res.status(400).send('Missing UserID');
-            return;
-        }
-        if (!pictureByteArray) {
-            res.status(400).send('Missing picture');
-            return;
-        }
-
-        try {
-            const user = await User.findOne({ where: { user_id: userID } });
-
-            if (user) {
-                const imageBuffer = Buffer.from(pictureByteArray, 'hex');
-                const type = await fileTypeFromBuffer(imageBuffer);
-
-                if (type.mime !== 'image/png') {
-                    res.status(400).send('Invalid image format');
-                    return;
-                }
-
-                const resizedImageBuffer = await sharp(imageBuffer)
-                    .resize({ width: 150, height: 150 })
-                    .toBuffer();
-
-                fs.writeFileSync(`./profile_pictures/${userID}.png`, resizedImageBuffer);
-                user.profile_picture = '/profile_pictures/' + userID + '.png';
-                await user.save();
-                res.status(200).send('Picture uploaded successfully');
-            } else {
-                res.status(404).send('User not found');
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Failed to upload picture');
         }
     });
 
@@ -368,6 +328,54 @@ async function startServer() {
             res.status(500).send('Failed to update country');
         }
     });
+
+    app.put('/user/picture', async (req, res) => {
+        const userID = req.query.user_id;
+        const pictureByteArray = req.body.picture;
+
+        if (!userID || !pictureByteArray) {
+            res.status(400).send('Missing required fields');
+            return;
+        }
+
+        try {
+            const user = await User.findOne({ where: { user_id: userID } });
+
+            if (user) {
+                const imageBuffer = Buffer.from(pictureByteArray, 'base64');
+                const type = await fileTypeFromBuffer(imageBuffer);
+
+                if (type.mime !== 'image/png' && type.mime !== 'image/jpeg' && type.mime !== 'image/jpg') {
+                    res.status(400).send('Invalid image format');
+                    return;
+                }
+
+                const extensions = ['png', 'jpeg', 'jpg'];
+                extensions.forEach((ext) => {
+                    const filePath = `./profile_pictures/${userID}.${ext}`;
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath);
+                    }
+                });
+
+                const extension = type.ext;
+                const resizedImageBuffer = await sharp(imageBuffer)
+                    .resize({ width: 150, height: 150 })
+                    .toFormat(extension)
+                    .toBuffer();
+
+                fs.writeFileSync(`./profile_pictures/${userID}.${extension}`, resizedImageBuffer);
+                user.profile_picture = '/profile_pictures/' + userID + '.' + extension;
+                await user.save();
+                res.status(200).send('Picture uploaded successfully');
+            } else {
+                res.status(404).send('User not found');
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Failed to upload picture');
+        }
+    });
 }
 
 async function startWebsocketServer() {
@@ -391,7 +399,6 @@ async function startWebsocketServer() {
 
     io.on('connection', (socket) => {
         socket.on('findGame', () => {
-            console.log('User looking for game');
             if (waitingPlayers.length > 0) {
                 const opponent = waitingPlayers.pop();
                 const gameId = generateGameId();
@@ -399,30 +406,28 @@ async function startWebsocketServer() {
                 opponent.join(gameId);
                 socket.join(gameId);
 
-                opponent.emit('gameStart', { gameId, color: 'white' });
-                socket.emit('gameStart', { gameId, color: 'black' });
+                opponent.emit('gameStart', { gameId, color: 'white', onMove: false });
+                socket.emit('gameStart', { gameId, color: 'black', onMove: true });
             } else {
-                console.log('User added to queue');
                 waitingPlayers.push(socket);
             }
         });
 
         socket.on('move', (data) => {
-            socket.to(data.gameId).emit('move', data.move);
+            socket.to(data.gameId).emit('move', data);
         });
 
         socket.on('resign', (gameId) => {
+            socket.hasResigned = true;
             socket.to(gameId).emit('resign');
         });
 
         socket.on('disconnect', () => {
             const gameId = getGameIdBySocketId(socket.id);
-            if (gameId) {
+            if (gameId && !socket.hasResigned) {
                 socket.to(gameId).emit('resign');
             }
             waitingPlayers = waitingPlayers.filter((player) => player.id !== socket.id);
-            console.log('User disconnected');
-            console.log(waitingPlayers);
         });
     });
 }

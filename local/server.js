@@ -58,20 +58,6 @@ async function startServer() {
         );
     });
 
-    // API for websocket testing
-    app.get('/', (req, res) => {
-        res.status(200).send(`<!DOCTYPE html>
-        <html>
-            <head>
-                <meta charset="utf-8" />
-                <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-            </head>
-            <body>
-                <script type="module" src="/websocket.js"></script>
-            </body>
-        </html>`);
-    });
-
     app.post('/register', async (req, res) => {
         const newUser = {
             username: req.query.username,
@@ -79,8 +65,6 @@ async function startServer() {
             password: req.query.password,
             hashedPassword: bcrypt.hashSync(req.query.password, 10),
         };
-
-        console.log(newUser);
 
         if (!newUser.username || !newUser.email || !newUser.hashedPassword) {
             res.status(400).send('Missing required fields');
@@ -422,15 +406,15 @@ async function startWebsocketServer() {
                 opponent.join(gameId);
                 socket.join(gameId);
 
-                opponent.emit('gameStart', { gameId, color: 'white' });
-                socket.emit('gameStart', { gameId, color: 'black' });
+                opponent.emit('gameStart', { gameId, color: 'white', onMove: false });
+                socket.emit('gameStart', { gameId, color: 'black', onMove: true });
             } else {
                 waitingPlayers.push(socket);
             }
         });
 
         socket.on('move', (data) => {
-            socket.to(data.gameId).emit('move', data.move);
+            socket.to(data.gameId).emit('move', data);
         });
 
         socket.on('resign', (gameId) => {
